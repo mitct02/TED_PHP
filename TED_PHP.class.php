@@ -1,8 +1,8 @@
 <?
 class TED_PHP {
-	public $host, $port, $ssl, $username, $password, $curl, $url, $mtu, $type, $api;
+	private $host, $port, $ssl, $username, $password, $curl, $url, $mtu, $type, $api;
 
-	function __construct($host, $port=80, $username='', $password='', $ssl=FALSE, $api='minutehistory', $mtu=0, $type='power') {
+	function __construct($host, $port=80, $username='', $password='', $ssl=FALSE, $api='minutehistory', $mtu=0, $type='power', $format='raw') {
 		$this->set_host($host);
 		$this->set_port($port);
 		$this->set_username($username);
@@ -11,6 +11,7 @@ class TED_PHP {
 		$this->set_api($api);
 		$this->set_type($type);
 		$this->set_mtu($mtu);
+		$this->set_format($format);
 
 		$this->init_url();
 		$this->init_curl();
@@ -18,11 +19,15 @@ class TED_PHP {
 
 
 	function __destruct() {
-		if($this->curl)
+		/* Close the cURL session if it's open */
+		if($this->curl) {
 			curl_close($this->curl);
+			unset($this->curl);
+		}
 	}
 
 
+	/* Set the gateway hostname */
 	public function set_host($host='') {
 		$host = trim($host);
 		if(strlen($host)>0)
@@ -30,6 +35,7 @@ class TED_PHP {
 	}
 
 
+	/* Set the gateway port */
 	public function set_port($port=0) {
 		$port = intval($port);
 		if($port>0 || $port<65535)
@@ -37,22 +43,26 @@ class TED_PHP {
 	}
 
 
+	/* Enable/Disable SSL */
 	public function set_ssl($ssl=FALSE) {
 		if($ssl===TRUE || $ssl===FALSE)
 			$this->ssl = $ssl;
 	}
 
 
+	/* Set the gateway authentication username */
 	public function set_username($username='') {
 		$this->username = trim($username);
 	}
 
 
+	/* Set the gateway authentication password */
 	public function set_password($password='') {
 		$this->password = trim($password);
 	}
 
 
+	/* Set the MTU number */
 	public function set_mtu($mtu=0) {
 		$mtu = intval($mtu);
 		if($mtu>=0)
@@ -60,20 +70,31 @@ class TED_PHP {
 	}
 
 
+	/* Set the type of data to be returned (power, cost, voltage, all) */
 	public function set_type($type='') {
 		$type = strtolower(trim($type));
-		if(strlen($type)>0 && ($type=='power' || $type=='cost' || $type=='voltage'))
+		if(strlen($type)>0 && ($type=='power' || $type=='cost' || $type=='voltage' || $type=='all'))
 			$this->type = $type;
 	}
 
 
-	public function set_api($api='') {
+	/* Set which API to query */
+	public function set_api($api='minutehistory') {
 		$api = strtolower(trim($api));
 		if(strlen($api)>0 && ($api=='livedata' || $api=='secondhistory' || $api=='minutehistory' || $api=='hourlyhistory' || $api=='dailyhistory' || $api=='monthlyhistory'))
 			$this->api = $api;
 	}
 
 
+	/* Set the return format. Raw is faster, thus recommended */
+	public function set_format($format='raw') {
+		$format = strtolower(trim($format));
+		if(strlen($format)>0 && ($format=='raw' || $format=='xml' || $format=='csv'))
+			$this->format = $format;
+	}
+
+
+	/* Build the API request URL from all the specified options */
 	private function init_url() {
 		$retval = '';
 
@@ -85,10 +106,27 @@ class TED_PHP {
 		$retval .= $this->host.':'.$this->port.'/';
 
 		
-		if($api=='LIVEDATA')
+		if($api=='livedata')
 			$retval .= 'api/LiveData.xml';
 		else {
-			$retval .= 'history/'.strtolower($this->api).'.xml';
+			$retval .= 'history/';
+
+			if($format=='raw')
+				$retval .= 'raw';
+
+			$retval .= strtolower($this->api);
+
+			switch($format) {
+				case 'raw':
+					$retval .= '.raw';
+					break;
+				case 'csv':
+					$retval .= '.csv';
+					break;
+				default:
+					$retval .= '.xml';
+			}
+
 			if($this->mtu>0)
 				$retval .= '?MTU='.$this->mtu;
 		}
@@ -97,6 +135,7 @@ class TED_PHP {
 	}
 
 
+	/* Initialize cURL */
 	private function init_curl() {
 		$retval = curl_init();
 
@@ -129,6 +168,7 @@ class TED_PHP {
 	}
 
 
+	/* Do a basic fetch */
 	public function fetch() {
 		return curl_exec($this->curl);
 	}

@@ -1,8 +1,13 @@
 <?
+/* Require required stuff */
 require 'TED_PHP.config.php';
 require 'TED_PHP.class.php';
 
-$ted = new TED_PHP($ted_hostname, $ted_port, $ted_username, $ted_password, $ted_ssl, $ted_api, $ted_mtu, $ted_type);
+/* Instantiate the object */
+$ted = new TED_PHP(TED_HOSTNAME, TED_PORT, TED_USERNAME, TED_PASSWORD, TED_SSL, TED_API, TED_MTU, TED_TYPE);
+
+
+/* Print stuff */
 print_r($ted);
 echo $ted->fetch();
 ?>
