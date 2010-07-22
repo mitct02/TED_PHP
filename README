@@ -1,0 +1,44 @@
+README
+======
+
+INTRODUCTION
+------------
+
+
+GitHub: http://github.com/wgbartley/TED_PHP
+Home Page: http://www.garrettbartley.com/TED_PHP/
+
+
+REQUIREMENTS
+------------
+PHP 5.x
+PHP cURL Extension (http://www.php.net/curl)
+
+
+INSTALL
+-------
+Extract the PHP source wherever and include it in your
+scripts.
+
+
+COPYING
+-------
+See the LICENSE file included.
+
+
+AUTHORS
+-------
+Garrett Bartley (http://www.garrettbartley.com)
+
+
+THANKS
+------
+
+
+DONATE
+------
+
+
+CHANGELOG
+---------
+
