@@ -95,9 +95,14 @@ class TED_PHP {
 
 
 	/* Build the API request URL from all the specified options */
-	private function init_url() {
+	private function init_url($index=0, $count=0) {
 		$retval = '';
+		$querystring = array();
 
+		$index = intval($index);
+		$count = intval($count);
+
+		/* Enable/disable SSL */
 		if($ssl===TRUE)
 			$retval .= 'https://';
 		else
@@ -105,18 +110,33 @@ class TED_PHP {
 
 		$retval .= $this->host.':'.$this->port.'/';
 
-		
-		if($api=='livedata')
+
+		/* If we want the LiveData.xml, set the format for XML */
+		if($api=='livedata') {
+			$this->format = 'xml';
 			$retval .= 'api/LiveData.xml';
-		else {
+		} else {
+			/* Otherwise, we probably want a history */
 			$retval .= 'history/';
 
-			if($format=='raw')
+			if($this->format=='raw') {
 				$retval .= 'raw';
 
+				/* And, due to the inconsistencies between the XML/CSV files and
+				 *  raw files, we make some corrections */
+				if($this->api=='hourlyhistory')
+					$this->api = 'hourhistory';
+				elseif($this->api=='dailyhistory')
+					$this->api = 'dayhistory';
+				elseif($this->api=='monthlyhistory')
+					$this->api = 'monthhistory';
+			}
+
+			/* Make sure it's lower-cased */
 			$retval .= strtolower($this->api);
 
-			switch($format) {
+			/* Append the file extension */
+			switch($this->format) {
 				case 'raw':
 					$retval .= '.raw';
 					break;
@@ -127,11 +147,33 @@ class TED_PHP {
 					$retval .= '.xml';
 			}
 
+			/* Add MTU to the query string */
 			if($this->mtu>0)
-				$retval .= '?MTU='.$this->mtu;
+				$querystring['MTU'] = $this->mtu;
 		}
 
-		$this->url = $retval;
+		/* Add INDEX to the query string */
+		if($index>0)
+			$querystring['INDEX'] = $index;
+
+		/* Add COUNT to the query string */
+		if($count>0)
+			$querystring['COUNT'] = $count;
+
+
+		/* If we have a query string, build it! */
+		if(count($querystring)>0) {
+			$retval .= '?';
+
+			$a = 0;
+			foreach($querystring as $q_k => $q_v) {
+				$retval .= $q_k.'='.$q_v;
+
+				$a++;
+				if($a<count($querystring))
+					$retval .= '&';
+			}
+		}
 	}
 
 
@@ -139,11 +181,12 @@ class TED_PHP {
 	private function init_curl() {
 		$retval = curl_init();
 
+		/* Fairly safe set of options */
 		curl_setopt_array($retval, array(
 			CURLOPT_URL => $this->url,
 			CURLOPT_RETURNTRANSFER => TRUE,
 			CURLOPT_HEADER => FALSE,
-			CURLOPT_CONNECTTIMEOUT => 30,
+			CURLOPT_CONNECTTIMEOUT => 10,
 			CURLOPT_SSL_VERIFYHOST => 0,
 			CURLOPT_SSL_VERIFYPEER => FALSE,
 			CURLOPT_FAILONERROR => TRUE,
@@ -153,6 +196,7 @@ class TED_PHP {
 		));
 
 
+		/* Enable/Disable SSL */
 		switch($ssl) {
 			case TRUE:
 				curl_setopt($retval, CURLOPT_PROTOCOLS, CURLPROTO_HTTPS);
@@ -161,16 +205,188 @@ class TED_PHP {
 		}
 
 
+		/* Authentication */
 		if(strlen($this->username)>0 && strlen($this->password>0))
-			$curl_setopt($retval, CURLOPT_USERPWD, $this->username.':'.$this->password);
-
-		$this->curl = $retval;
+			curl_setopt($retval, CURLOPT_USERPWD, $this->username.':'.$this->password);
 	}
 
 
 	/* Do a basic fetch */
-	public function fetch() {
-		return curl_exec($this->curl);
+	public function fetch($index=0, $count=0, $rawresponse=FALSE) {
+		$retval = '';
+
+		/* If an index or count was passed, rebuild the URL */
+		if($index+$count>0) {
+			$this->init_url($index, $count);
+
+			curl_setopt($this->curl, CURLOPT_URL, $this->url);
+		}
+
+		/* Make the call */
+		$retval = trim(curl_exec($this->curl));
+
+		/* No data was returned.  Usually means it timed out */
+		if(strlen($retval)==0) {
+			echo "no data\n";
+			return FALSE;
+		}
+
+		/* If we want to pass back the raw response to the caller */
+		if($rawresponse===TRUE)
+			return $retval;
+		else
+			/* Otherwise, process the response depending on format */
+			switch($this->format) {
+				case 'raw':
+					return $this->decode_raw_fetch($retval);
+					break;
+				case 'csv':
+					return $this->decode_csv_fetch($retval);
+					break;
+				default:
+					return $this->decode_xml_fetch($retval);
+			}
+	}
+
+
+	private function decode_raw_fetch($str='') {
+		$retval = array();
+		$str = trim($str);
+
+		/* Turn the response into a line-by-line array */
+		$lines = explode("\n", $str);
+		$arr = array();
+
+		/* Loop */
+		foreach($lines as $line) {
+			$line = trim($line);
+
+			/* Add the trailing == in case it was left out */
+			if(substr($line, -2)!='==')
+				$line .= '==';
+
+			$packstr = '';
+			switch($this->api) {
+				/* Seconds */
+				case 'secondhistory':
+					$packstr = 'Cyear/Cmonth/Cday/Chour/Cminute/Csecond/lpower/lcost/svoltage';
+
+					$arr = unpack($packstr, base64_decode($line));
+
+					$arr['voltage'] = $arr['voltage']/20;
+
+					break;
+				/* Minutes */
+				case 'minutehistory':
+					$packstr = 'Cyear/Cmonth/Cday/Chour/Cminute/lpower/lcost/svoltage';
+
+					$arr = unpack($packstr, base64_decode($line));
+
+					$arr['voltage'] = $arr['voltage']/20;
+
+					break;
+				/* Hours */
+				case 'hourhistory':
+					$packstr = 'Cyear/Cmonth/Cday/Chour/lpower/lcost/svoltage_high/svoltage_low';
+					
+					$arr = unpack($packstr, base64_decode($line));
+
+					$arr['voltage_low'] = $arr['voltage_low']/20;
+					$arr['voltage_high'] = $arr['voltage_high']/20;
+
+					break;
+				/* Days */
+				case 'dayhistory':
+					$packstr = 'Cyear/Cmonth/Cday/lpower/lcost/spower_low/Cpower_low_hour/Cpower_low_min';
+					$packstr .= '/spower_high/Cpower_high_hour/Cpower_high_min/scost_low/Ccost_low_hour/';
+					$packstr .= 'Ccost_low_min/scost_high/Ccost_high_hour/Ccost_high_min/svoltage_low/';
+					$packstr .= 'Cvoltage_low_hour/Cvoltage_low_min/svoltage_high/Cvoltage_high_hour/';
+					$packstr .= 'Cvoltage_high_min';
+
+					$arr = unpack($packstr, base64_decode($line));
+
+					$arr['voltage_low'] = $arr['voltage_low']/20;
+					$arr['voltage_high'] = $arr['voltage_high']/20;
+
+					break;
+				/* Months */
+				case 'monthhistory':
+					/* I don't have a monthly history yet, so I can't test */
+					$packstr = 'Cyear/Cmonth/lpower/lcost/spower_low/Cpower_low_month/Cpower_low_day';
+					$packstr .= '/spower_high/Cpower_high_month/Cpower_high_day/scost_low/Ccost_low_month/';
+					$packstr .= 'Ccost_low_day/scost_high/Ccost_high_month/Ccost_high_day/svoltage_low/';
+					$packstr .= 'Cvoltage_low_month/Cvoltage_low_day/svoltage_high/Cvoltage_high_month/';
+					$packstr .= 'Cvoltage_high_day';
+
+					$arr = unpack($packstr, base64_decode($line));
+					
+					$arr['voltage_low'] = $arr['voltage_low']/20;
+					$arr['voltage_high'] = $arr['voltage_high']/20;
+
+					break;
+			}
+
+			$retval[] = $arr;
+		}
+
+		return $retval;
+	}
+
+
+	private function decode_csv_fetch($str='') {
+		$retval = array();
+		$str = trim($str);
+
+		/* Turn the response into a line-by-line array */
+		$lines = explode("\n", $str);
+
+		/* Loop! */
+		$headers = FALSE;
+		foreach($lines as $line) {
+			$line = str_getcsv($line);
+
+			/* If we don't have headers yet, it means we're on the first line and should use that */
+			if(!$headers) {
+				$headers = $line;
+				continue;
+			}
+
+			/* Build the array */
+			$arr = array();
+			for($a=0;$a<count($line);$a++)
+				$arr[$headers[$a]] = $line[$a];
+
+			/* There seems to be an empty line that is translated as one field--ignore it */
+			if(count($line)>1)
+				$retval[] = $arr;
+		}
+
+		return $retval;
+	}
+
+
+	private function decode_xml_fetch($str) {
+		$retval = array();
+		$staging = array();
+		$str = trim($str);
+
+		/* Convert to object */
+		$xml = new SimpleXMLElement($str);
+
+		/* Remove the top-level */
+		$xml = (array)$xml;
+		$key = array_keys($xml);
+		$xml = $xml[$key[0]];
+
+		/* Convert everything to an array */
+		foreach(array_keys($xml) as $x_v)
+			$staging[] = (array)$xml[$x_v];
+
+		/* Make the array keys lower-cased */
+		foreach($staging as $s_k => $s_v)
+			$retval = array(strtolower($s_k) => $s_v);
+
+		return $retval;
 	}
 }
 ?>
