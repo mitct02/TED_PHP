@@ -17,6 +17,7 @@ Home Page: http://www.garrettbartley.com/TED_PHP/
 REQUIREMENTS
 ------------
 PHP 5.x
+PHP SimpleXML Extension (http://www.php.net/simplexml)
 PHP cURL Extension (http://www.php.net/curl)
 
 
