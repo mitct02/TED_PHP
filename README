@@ -3,7 +3,12 @@ README
 
 INTRODUCTION
 ------------
+This is a PHP class to hopefully make writing PHP
+applications to consume "The Energy Detective"
+(TED) API a little easier.
 
+More information on The Energy Detective available at:
+  http://www.theenergydetective.com
 
 GitHub: http://github.com/wgbartley/TED_PHP
 Home Page: http://www.garrettbartley.com/TED_PHP/
@@ -31,14 +36,14 @@ AUTHORS
 Garrett Bartley (http://www.garrettbartley.com)
 
 
-THANKS
-------
-
-
 DONATE
 ------
+If you like it, use it.  If you wish to say "thanks",
+I won't say "no"!  If you're feeling spendy, check out
+my Amazon wish list: http://amzn.com/w/2PTMT08JVHHAT
 
 
 CHANGELOG
 ---------
-
+2010-07-23  v1.0  Garrett Bartley  <wgb@wgb.me>
+  * Initial release
