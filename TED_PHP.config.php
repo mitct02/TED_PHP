@@ -1,6 +1,6 @@
 <?
 /* Your TED configuration */
-define('TED_HOSTNAME', 'TED5000');		# The hostname of your TED gateway device
+define('TED_HOSTNAME', 'test');		# The hostname of your TED gateway device
 define('TED_PORT', 5000);				# The port number of your TED gateway device
 define('TED_USERNAME', '');				# The authentication username
 define('TED_PASSWORD', '');				# The authentication password
