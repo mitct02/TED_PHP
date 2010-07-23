@@ -174,6 +174,8 @@ class TED_PHP {
 					$retval .= '&';
 			}
 		}
+
+		$this->url = $retval;
 	}
 
 
@@ -208,6 +210,8 @@ class TED_PHP {
 		/* Authentication */
 		if(strlen($this->username)>0 && strlen($this->password>0))
 			curl_setopt($retval, CURLOPT_USERPWD, $this->username.':'.$this->password);
+
+		$this->curl = $retval;
 	}
 
 
@@ -221,6 +225,7 @@ class TED_PHP {
 
 			curl_setopt($this->curl, CURLOPT_URL, $this->url);
 		}
+
 
 		/* Make the call */
 		$retval = trim(curl_exec($this->curl));
@@ -323,6 +328,25 @@ class TED_PHP {
 					$arr['voltage_low'] = $arr['voltage_low']/20;
 					$arr['voltage_high'] = $arr['voltage_high']/20;
 
+					break;
+			}
+
+
+			switch($this->type) {
+				case 'power':
+					foreach(array_keys($arr) as $k)
+						if(stripos($k,'voltage')!==FALSE || stripos($k,'cost')!==FALSE)
+							unset($arr[$k]);
+					break;
+				case 'cost':
+					foreach(array_keys($arr) as $k)
+						if(stripos($k,'power')!==FALSE || stripos($k,'voltage')!==FALSE)
+							unset($arr[$k]);
+					break;
+				case 'voltage':
+					foreach(array_keys($arr) as $k)
+						if(stripos($k,'power')!==FALSE || stripos($k,'cost')!==FALSE)
+							unset($arr[$k]);
 					break;
 			}
 
