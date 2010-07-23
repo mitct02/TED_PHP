@@ -94,6 +94,60 @@ class TED_PHP {
 	}
 
 
+	/* Get the host */
+	public function get_host() {
+		return $this->host;
+	}
+
+
+	/* Get the port */
+	public function get_port() {
+		return $this->port;
+	}
+
+
+	/* Get SSL */
+	public function get_ssl() {
+		return $this->ssl;
+	}
+
+
+	/* Get the username */
+	public function get_username() {
+		return $this->username();
+	}
+
+
+	/* Get the password */
+	public function get_password() {
+		return 'xXxXxX';
+	}
+
+
+	/* Get the MTU */
+	public function get_mtu() {
+		return $this->mtu;
+	}
+
+
+	/* Get the type */
+	public function get_type() {
+		return $this->type();
+	}
+
+
+	/* Get the API */
+	public function get_api() {
+		return $this->api();
+	}
+
+
+	/* Get the format */
+	public function get_format() {
+		return $this->format();
+	}
+
+
 	/* Build the API request URL from all the specified options */
 	private function init_url($index=0, $count=0) {
 		$retval = '';
