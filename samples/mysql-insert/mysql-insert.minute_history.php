@@ -19,14 +19,14 @@ mysql_select_db(TED_DB_NAME, $db)
 	or die('Unable to open MySQL database'.PHP_EOL);
 
 
-/* Get the number of seconds since the last update, fall back on Unix epoch if
+/* Get the number of minutes since the last update, fall back on Unix epoch if
  * null, and determine our max offset between TED time and database server time */
 $query = <<<EOQ
 SELECT
-	UNIX_TIMESTAMP(NOW())-UNIX_TIMESTAMP(COALESCE(MAX(`insert_ts`),FROM_UNIXTIME(0))) AS `last_update`,
-	COALESCE(MAX(UNIX_TIMESTAMP(`timestamp`)-UNIX_TIMESTAMP(`insert_ts`)),0) AS `max_offset`
+	CEIL((UNIX_TIMESTAMP(NOW())-UNIX_TIMESTAMP(COALESCE(MAX(`insert_ts`),FROM_UNIXTIME(0))))/60) AS `last_update`,
+	CEIL(COALESCE(MAX(UNIX_TIMESTAMP(`timestamp`)-UNIX_TIMESTAMP(`insert_ts`)),0)/60) AS `max_offset`
 FROM
-	`second_history`
+	`minute_history`
 EOQ;
 $result = mysql_query($query, $db);
 $last_update = mysql_result($result, 0, 'last_update');
@@ -34,15 +34,15 @@ $max_offset = mysql_result($result, 0, 'max_offset');
 
 
 /* Add the offset plus a gratuitous fudge factor */
-echo 'Last update was '.number_format($last_update).' second(s) ago.'.PHP_EOL;
-echo 'Maximum offset is '.number_format($max_offset).' second(s) ago.'.PHP_EOL;
+echo 'Last update was '.number_format($last_update).' minute(s) ago.'.PHP_EOL;
+echo 'Maximum offset is '.number_format($max_offset).' minute(s) ago.'.PHP_EOL;
 $last_update += $max_offset*1.5;
 echo 'Number of records to retrieve after gratuitous fudge factor is '.number_format($last_update).' record(s).'.PHP_EOL;
 
 
-/* Don't try to poll more than 1 hour's worth of seconds (3600) */
-if($last_update>3600)
-	$last_update = 3600;
+/* Don't try to poll more than 2 days' worth of minutes (2880) */
+if($last_update>2880)
+	$last_update = 2880;
 
 
 /* Instantiate the TED_PHP object */
@@ -62,9 +62,9 @@ $a = -1;
 
 /* Loop through the results and insert into the table */
 foreach($seconds as $second) {
-	$timestamp = $century.$second['year'].'-'.$second['month'].'-'.$second['day'].' '.$second['hour'].':'.$second['minute'].':'.$second['second'];
+	$timestamp = $century.$second['year'].'-'.$second['month'].'-'.$second['day'].' '.$second['hour'].':'.$second['minute'].':00';
 	$query = <<<EOQ
-INSERT IGNORE INTO `second_history` (
+INSERT IGNORE INTO `minute_history` (
 	`mtu`,
 	`timestamp`,
 	`power`,
@@ -86,7 +86,7 @@ EOQ;
 	$a++;
 
 	/* Display progress for every 100 records */
-	if($a%100==0)
+	if($a+1%100==0)
 		echo 'Inserted '.number_format($a).' records . . .'.PHP_EOL;
 }
 
