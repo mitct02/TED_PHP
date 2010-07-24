@@ -2,10 +2,9 @@
 /* Get the timestamp of when we start */
 $start_ts = time();
 
+
 /* Require required stuff */
 require 'mysql-insert.config.php';
-require '../../TED_PHP.config.php';
-require '../../TED_PHP.class.php';
 
 
 /* Set the century */
@@ -13,9 +12,9 @@ $century = substr(date('Y'),0,2);
 
 
 /* Connect to the database */
-$db = mysql_connect(TED_DB_HOST, TED_DB_USER, TED_DB_PASS)
+$db = mysql_connect($TED_DB_HOST, $TED_DB_USER, $TED_DB_PASS)
 	or die('Unable to connect to MySQL server'.PHP_EOL);
-mysql_select_db(TED_DB_NAME, $db)
+mysql_select_db($TED_DB_NAME, $db)
 	or die('Unable to open MySQL database'.PHP_EOL);
 
 
@@ -26,7 +25,7 @@ SELECT
 	UNIX_TIMESTAMP(NOW())-UNIX_TIMESTAMP(COALESCE(MAX(`insert_ts`),FROM_UNIXTIME(0))) AS `last_update`,
 	COALESCE(MAX(UNIX_TIMESTAMP(`timestamp`)-UNIX_TIMESTAMP(`insert_ts`)),0) AS `max_offset`
 FROM
-	`second_history`
+	`{$TED_TABLE_SECONDHISTORY}`
 EOQ;
 $result = mysql_query($query, $db);
 $last_update = mysql_result($result, 0, 'last_update');
@@ -36,7 +35,7 @@ $max_offset = mysql_result($result, 0, 'max_offset');
 /* Add the offset plus a gratuitous fudge factor */
 echo 'Last update was '.number_format($last_update).' second(s) ago.'.PHP_EOL;
 echo 'Maximum offset is '.number_format($max_offset).' second(s) ago.'.PHP_EOL;
-$last_update += $max_offset*1.5;
+$last_update += $max_offset*$TED_HISTORY_FUDGEFACTOR;
 echo 'Number of records to retrieve after gratuitous fudge factor is '.number_format($last_update).' record(s).'.PHP_EOL;
 
 

@@ -1,0 +1,56 @@
+README
+======
+
+INTRODUCTION
+------------
+This is a set of scripts to periodically poll a TED gateway device and insert
+new records into a MySQL database.  The current two histories supported are
+seconds and minutes as most everything else can be calculated from there.  Upon
+first run, the script will attempt to get as much data in the past as it can.
+On each subsequent run, it will attempt to calculate how much data it needs to
+get based on the time offset between the MySQL server and the TED gateway
+device.  It then adds a fudge factor specified in the mysql-insert.config.php
+(currently set to an extra 50%).
+
+GitHub: http://github.com/wgbartley/TED_PHP
+Home Page: http://www.garrettbartley.com/TED_PHP/
+
+
+REQUIREMENTS
+------------
+PHP 5.x
+TED_PHP
+
+
+INSTALL
+-------
+Create a MySQL database to house the data and run the create_tables.sql script
+within that database.  Feel free to change the table names as you would like.
+If you change the table names, you will need to update the $TED_TABLE_*
+variables in mysql-insert.config.php.  Also set the appropriate MySQL connection
+and authentication parameters in mysql-insert.config.php.  Finally, set up the
+script(s) to run as a cron job.  For seconds data, once a minute is good.  For
+minute data, once every 5 minutes is good.
+
+
+COPYING
+-------
+See the LICENSE file in root directory.
+
+
+AUTHORS
+-------
+Garrett Bartley (http://www.garrettbartley.com)
+
+
+DONATE
+------
+If you like it, use it.  If you wish to say "thanks", I won't say "no"!  If
+you're feeling spendy, check out my Amazon wish list:
+  http://amzn.com/w/2PTMT08JVHHAT
+
+
+CHANGELOG
+---------
+2010-07-23  v1.0  Garrett Bartley  <wgb@wgb.me>
+  * Initial release

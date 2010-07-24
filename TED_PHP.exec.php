@@ -8,5 +8,5 @@ $ted = new TED_PHP(TED_HOSTNAME, TED_PORT, TED_USERNAME, TED_PASSWORD, TED_SSL, 
 
 
 /* Print stuff */
-print_r($ted->fetch(0,2));
+echo count($ted->fetch()).PHP_EOL;
 ?>
