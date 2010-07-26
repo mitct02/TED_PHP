@@ -47,12 +47,8 @@ if($last_update>3600)
 /* Instantiate the TED_PHP object */
 echo 'Fetching '.number_format($last_update).' records . . .'.PHP_EOL;
 
-$ted = new TED_PHP(TED_HOSTNAME, TED_PORT, TED_USERNAME, TED_PASSWORD, TED_SSL, TED_API, TED_MTU, TED_TYPE, TED_FORMAT);
+$ted = new TED_PHP($TED_HOSTNAME, $TED_PORT, $TED_USERNAME, $TED_PASSWORD, $TED_SSL, $TED_API, $TED_MTU, $TED_TYPE, $TED_FORMAT);
 $seconds = $ted->fetch(0,$last_update+2); /* The +2 makes sure we get 3600 ... don't ask me why */
-
-
-/* Assign TED_MTU to a real variable to be used in the heredoc queries */
-$TED_MTU = $ted->get_mtu();
 
 
 /* Something to count with (offset for our little +2 a few lines above) */
