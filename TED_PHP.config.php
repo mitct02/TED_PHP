@@ -1,14 +1,14 @@
 <?
 /* Your TED configuration */
-define('TED_HOSTNAME', 'home.phragshouse.net');		# The hostname of your TED gateway device
-define('TED_PORT', 5000);				# The port number of your TED gateway device
-define('TED_USERNAME', '');				# The authentication username
-define('TED_PASSWORD', '');				# The authentication password
-define('TED_SSL', FALSE);				# Enable/Disable SSL +
-define('TED_API', 'secondhistory');		# The API request to use ++
-define('TED_MTU', 0);					# The MTU number to retrieve data +++
-define('TED_TYPE', 'all');				# The field you wish to calculate ++++
-define('TED_FORMAT', 'raw');			# The format response for the API reqeust +++++
+$TED_HOSTNAME = 'ted5000';		# The hostname of your TED gateway device
+$TED_PORT = 80;					# The port number of your TED gateway device
+$TED_USERNAME = '';				# The authentication username
+$TED_PASSWORD = '';				# The authentication password
+$TED_SSL = FALSE;				# Enable/Disable SSL +
+$TED_API = 'secondhistory';		# The API request to use ++
+$TED_MTU = 0;					# The MTU number to retrieve data +++
+$TED_TYPE = 'power';			# The field you wish to calculate ++++
+$TED_FORMAT = 'raw';			# The format response for the API reqeust +++++
 
 
 /*
