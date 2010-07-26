@@ -1,0 +1,60 @@
+README
+======
+
+INTRODUCTION
+------------
+Monitor your Energy Detective readings from Cacti
+
+GitHub: http://github.com/wgbartley/TED_PHP
+Home Page: http://www.garrettbartley.com/TED_PHP/
+
+
+REQUIREMENTS
+------------
+PHP 5.x
+TED_PHP
+Cacti
+
+
+INSTALL
+-------
+Extract to a directory accessible to your Cacti installation.  Edit config.php
+to overwrite any variables from TED_PHP.config.php for your gateway device.
+
+In Cacti, add a new Data Input Method named "The Energy Detective".  Select
+"Script/Command" as the Input Type and type "php /path/to/cacti.php" as the
+Input String where "/path/to/cacti.php" is the full path to cacti.php for
+TED_PHP.  Next, add 3 output fields with field and friendly name of for each of
+"cost", "voltage", and "power".  Save the Data Input Method.  Import the 4 XML
+files included (Cacti_DataTemplate.xml, Cacti_GraphTemplate_Cost.xml,
+Cacti_GraphTemplate_Power.xml, and Cacti_GraphTemplate_Voltage.xml).  Set up
+your Energy Detective device and add the Cost, Voltage, and Power graphs to
+the device.
+
+In theory, that should get you up and running.  However, Cacti is by no means a
+simple system.  It took me several attempts to get it setup and working for my
+configuration, so there may have been some settings tweaked that may make it
+incompatible for you.
+
+
+COPYING
+-------
+See the LICENSE file in root directory.
+
+
+AUTHORS
+-------
+Garrett Bartley (http://www.garrettbartley.com)
+
+
+DONATE
+------
+If you like it, use it.  If you wish to say "thanks", I won't say "no"!  If
+you're feeling spendy, check out my Amazon wish list:
+  http://amzn.com/w/2PTMT08JVHHAT
+
+
+CHANGELOG
+---------
+2010-07-26  v1.0  Garrett Bartley  <wgb@wgb.me>
+  * Initial release
