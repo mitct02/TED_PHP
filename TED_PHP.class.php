@@ -256,6 +256,7 @@ class TED_PHP {
 		switch($ssl) {
 			case TRUE:
 				curl_setopt($retval, CURLOPT_PROTOCOLS, CURLPROTO_HTTPS);
+				break;
 			default:
 				curl_setopt($retval, CURLOPT_PROTOCOLS, CURLPROTO_HTTP);
 		}
