@@ -26,6 +26,21 @@ Extract the PHP source wherever and include it in your
 scripts.
 
 
+USAGE
+-----
+See TED_PHP.exec.php for an example usage.  Typical usage would be to instantiate
+the TED_PHP class.  Once instantiated, set the API using set_api() function and
+then using fetch() to return the data in an array.
+
+$ted = new TED_PHP($TED_HOSTNAME, $TED_PORT, $TED_USERNAME, $TED_PASSWORD, $TED_SSL);
+
+$ted->set_api('livedata');
+print_r($ted->fetch());
+
+$ted->set_api('secondhistory');
+print_r($ted->fetch(1,1));
+
+
 COPYING
 -------
 See the LICENSE file included.
