@@ -2,18 +2,23 @@
 class TED_PHP {
 	private $host, $port, $ssl, $username, $password, $curl, $url, $mtu, $type, $api;
 
-	function __construct($host, $port=80, $username='', $password='', $ssl=FALSE, $api='minutehistory', $mtu=0, $type='power', $format='raw') {
+	function __construct($host, $port=80, $username='', $password='', $ssl=FALSE) {
+		/* Set some defaults */
+		$this->set_api('secondhistory');
+		$this->set_type('power');
+		$this->set_mtu(0);
+		$this->set_format('raw');
+		
+		
+		/* Set values passed when class is called */
 		$this->set_host($host);
 		$this->set_port($port);
 		$this->set_username($username);
 		$this->set_password($password);
 		$this->set_ssl($ssl);
-		$this->set_api($api);
-		$this->set_type($type);
-		$this->set_mtu($mtu);
-		$this->set_format($format);
 
-		$this->init_url();
+
+		/* Initialize cURL */
 		$this->init_curl();
 	}
 
@@ -132,19 +137,19 @@ class TED_PHP {
 
 	/* Get the type */
 	public function get_type() {
-		return $this->type();
+		return $this->type;
 	}
 
 
 	/* Get the API */
 	public function get_api() {
-		return $this->api();
+		return $this->api;
 	}
 
 
 	/* Get the format */
 	public function get_format() {
-		return $this->format();
+		return $this->format;
 	}
 
 
@@ -166,7 +171,7 @@ class TED_PHP {
 
 
 		/* If we want the LiveData.xml, set the format for XML */
-		if($api=='livedata') {
+		if($this->api=='livedata') {
 			$this->format = 'xml';
 			$retval .= 'api/LiveData.xml';
 		} else {
@@ -253,13 +258,13 @@ class TED_PHP {
 
 
 		/* Enable/Disable SSL */
-		switch($ssl) {
-			case TRUE:
-				curl_setopt($retval, CURLOPT_PROTOCOLS, CURLPROTO_HTTPS);
-				break;
-			default:
-				curl_setopt($retval, CURLOPT_PROTOCOLS, CURLPROTO_HTTP);
-		}
+		#switch($ssl) {
+		#	case TRUE:
+		#		curl_setopt($retval, CURLOPT_PROTOCOLS, CURLPROTO_HTTPS);
+		#		break;
+		#	default:
+		#		curl_setopt($retval, CURLOPT_PROTOCOLS, CURLPROTO_HTTP);
+		#}
 
 
 		/* Authentication */
@@ -273,13 +278,14 @@ class TED_PHP {
 	/* Do a basic fetch */
 	public function fetch($index=0, $count=0, $rawresponse=FALSE) {
 		$retval = '';
-
+		
 		/* If an index or count was passed, rebuild the URL */
-		if($index+$count>0) {
+		if($index+$count>0)
 			$this->init_url($index, $count);
+		else
+			$this->init_url();
 
-			curl_setopt($this->curl, CURLOPT_URL, $this->url);
-		}
+		curl_setopt($this->curl, CURLOPT_URL, $this->url);
 
 
 		/* Make the call */
@@ -452,19 +458,22 @@ class TED_PHP {
 		/* Convert to object */
 		$xml = new SimpleXMLElement($str);
 
-		/* Remove the top-level */
-		$xml = (array)$xml;
-		$key = array_keys($xml);
-		$xml = $xml[$key[0]];
+		if($this->api!='livedata') {
+			/* Remove the top-level */
+			$xml = (array)$xml;
+			$key = array_keys($xml);
+			$xml = $xml[$key[0]];
 
-		/* Convert everything to an array */
-		foreach(array_keys($xml) as $x_v)
-			$staging[] = (array)$xml[$x_v];
+			/* Convert everything to an array */
+			foreach(array_keys($xml) as $x_v)
+				$staging[] = (array)$xml[$x_v];
 
-		/* Make the array keys lower-cased */
-		foreach($staging as $s_k => $s_v)
-			$retval = array(strtolower($s_k) => $s_v);
-
+			/* Make the array keys lower-cased */
+			foreach($staging as $s_k => $s_v)
+				$retval = array(strtolower($s_k) => $s_v);
+		} else
+			$retval = $xml;
+		
 		return $retval;
 	}
 }
